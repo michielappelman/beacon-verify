@@ -1,14 +1,12 @@
 # Verify the NIST beacon
 # Michiel Appelman <michiel@appelman.se>
 
-import sys
 import time
 import OpenSSL
 import hashlib
 import requests
 import argparse
 import xml.etree.ElementTree as ET
-from optparse import OptionParser
 
 def main():
     parser = argparse.ArgumentParser()
@@ -33,18 +31,24 @@ def main():
         print "Signature hash successfully matches Output Value."
 
 def get(timestamp='last', base_url='https://beacon.nist.gov/rest/record/'):
-    """Load a certain beacon record.
+    """Load a certain beacon record in a dict.
 
     timestamp -- integer or string "last" (default: "last")
     base_url  -- base URL for beacon record XML
-                    (default: https://beacon.nist.gov/rest/record/)"""
+                    (default: https://beacon.nist.gov/rest/record/)
+    
+    This also adds a 'data' field with the fields to be signed concatenated."""
     if timestamp != "last":
         try:
             int(timestamp)+1
         except ValueError:
             print "Provided timestamp must be integer or 'last'"
-            sys.exit(1)
-    record = requests.get(base_url + timestamp, verify=True)
+            return None
+    try:
+        record = requests.get(base_url + str(timestamp), verify=True)
+    except:
+        print "Error requesting " + base_url + str(timestamp)
+        return None
     xml = ET.fromstring(record.content)
     beacon = {}
     for child in xml:
@@ -75,7 +79,7 @@ def verify(signature, data, cfile='./beacon.cer'):
         cert_file = open(cfile, 'r').read()
     except IOError:
         print "Can not read certification file %s." % cfile
-        sys.exit(1)
+        return None
     beacon_cert = OpenSSL.crypto.load_certificate(OpenSSL.crypto.FILETYPE_PEM, \
     cert_file)
     try:
