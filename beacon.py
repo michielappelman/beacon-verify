@@ -38,7 +38,7 @@ def get(timestamp='last', base_url='https://beacon.nist.gov/rest/record/'):
                     (default: https://beacon.nist.gov/rest/record/)
     
     This also adds a 'data' field with the fields to be signed concatenated."""
-    if timestamp != "last" and not timestamp.isdigit():
+    if timestamp != "last" and not str(timestamp).isdigit():
         print "Provided timestamp must be integer or 'last'"
         return None
     try:
@@ -95,6 +95,27 @@ def check_output(signature, output):
     if sign_hash != output:
         return False
     return True
+
+def start_of_chain(timestamp, base_url='https://beacon.nist.gov/rest/record/'):
+    """Returns a dict containing data for the start of a chain for a certain 
+    beacon specified by a timestamp.
+
+    timestamp -- integer 
+    base_url  -- base URL for beacon record XML
+                    (default: https://beacon.nist.gov/rest/record/)"""
+    if not str(timestamp).isdigit():
+        print "Provided timestamp must be integer"
+        return None
+    try:
+        record = requests.get(base_url + "start-chain/" + str(timestamp), verify=True)
+    except:
+        print "Error requesting " + base_url + "start-chain/" + str(timestamp)
+        return None
+    xml = ET.fromstring(record.content)
+    beacon = {}
+    for child in xml:
+        beacon[child.tag] = child.text
+    return get(beacon['timeStamp'], base_url)
 
 if __name__ == "__main__":
     main()
