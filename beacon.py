@@ -38,12 +38,9 @@ def get(timestamp='last', base_url='https://beacon.nist.gov/rest/record/'):
                     (default: https://beacon.nist.gov/rest/record/)
     
     This also adds a 'data' field with the fields to be signed concatenated."""
-    if timestamp != "last":
-        try:
-            int(timestamp)+1
-        except ValueError:
-            print "Provided timestamp must be integer or 'last'"
-            return None
+    if timestamp != "last" and not timestamp.isdigit():
+        print "Provided timestamp must be integer or 'last'"
+        return None
     try:
         record = requests.get(base_url + str(timestamp), verify=True)
     except:
